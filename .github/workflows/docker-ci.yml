@@ -23,22 +23,16 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # Modified login step with explicit DockerHub credentials
+      # Simplified Docker login - using direct command instead of action
       - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/grace-of-god-java:latest
+      # Build and push using standard Docker commands
+      - name: Build and tag Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/grace-of-god-java:latest .
+      
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/grace-of-god-java:latest
 
   deploy:
     needs: build-and-push
